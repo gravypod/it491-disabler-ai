@@ -61,10 +61,71 @@ namespace DisablerAi
                         return true;
                     }
 
-                    return true;
+
+                    if (State == RobotAiState.SearchingLookAroundPlayerLastSeen)
+                    {
+                        if ((DateTime.Now - TimeMarker).TotalSeconds > 2)
+                        {
+                            return true;
+                        }
+                    }
+
+
+                    if (State == RobotAiState.SearchingLookAroundPointOfInterest && PlayerLocations.Count() == 0)
+                    {
+                        if ((DateTime.Now - TimeMarker).TotalSeconds > 5)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+
+                case RobotAiState.SearchingLookAroundPlayerLastSeen:
+                    if (State == RobotAiState.SearchingFollowUpPlayerLastSeen)
+                    {
+                        if (Robot.ReachedTarget())
+                            return true;
+                    }
+
+                    return false;
+                case RobotAiState.SearchingLookAroundPointOfInterest:
+
+                    if (State == RobotAiState.SearchingFollowUpPointOfInterest)
+                    {
+                        if (Robot.ReachedTarget())
+                            return true;
+                    }
+
+                    return false;
+
+                case RobotAiState.SearchingFollowUpPlayerLastSeen:
+                    if (State == RobotAiState.SearchingLookAroundPointOfInterest && PlayerLocations.Any())
+                    {
+                        if ((DateTime.Now - TimeMarker).TotalSeconds > 5)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
 
                 // Alert State Machine
                 case RobotAiState.Alert:
+
+                    bool hasBeenSearching = State == RobotAiState.Searching ||
+                                            State == RobotAiState.SearchingFollowUpPlayerLastSeen ||
+                                            State == RobotAiState.SearchingFollowUpPointOfInterest ||
+                                            State == RobotAiState.SearchingLookAroundPlayerLastSeen ||
+                                            State == RobotAiState.SearchingLookAroundPointOfInterest;
+                    if (hasBeenSearching && PlayerLocations.Any())
+                    {
+                        if ((DateTime.Now - PlayerLocations.Last().Time).TotalMinutes > 1)
+                        {
+                            return true;
+                        }
+                    }
+                    
                     if (State == RobotAiState.Patrol)
                     {
                         float distance = Robot.Location.DistanceFrom(Player.Location);
