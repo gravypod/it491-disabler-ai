@@ -37,9 +37,24 @@ namespace DisablerAi
                     return false;
                 case RobotAiState.Inactive:
                     return this.State == RobotAiState.Start;
-
+            
+                // Searching State Machine
                 case RobotAiState.Searching:
-                    break;
+
+                    if (State == RobotAiState.AlertFollowUp)
+                    {
+                        if (!Robot.CanSee(Player) && !Robot.CanHear(Player))
+                        {
+                            if ((DateTime.Now - TimeMarker).TotalMinutes >= 1)
+                                return true;
+                        }
+
+                    }
+
+                    if (State == RobotAiState.SuspicionCallHeadQuarters)
+                        return true;
+                    
+                    return false;
 
                 // Alert State Machine
                 case RobotAiState.Alert:

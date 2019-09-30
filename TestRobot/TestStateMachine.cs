@@ -876,5 +876,34 @@ namespace TestRobot
             ai.State = RobotAiState.SuspicionShrugOff;
             Assert.True(ai.Can(RobotAiState.Patrol));
         }
+        
+        // Searching Unit Tests
+        
+        
+
+        [Test]
+        public void TestSuspicionCallHeadQuartersCanMoveToSearching()
+        {
+            RobotAi ai = new MockRobotAi();
+
+            ai.State = RobotAiState.SuspicionCallHeadQuarters;
+            Assert.True(ai.Can(RobotAiState.Searching));
+        }
+        
+
+        [Test]
+        public void TestAlertFollowUpCannotSeeCannotHearAfter1MinuteCanMoveToSearching()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = false;
+
+            ai.TimeMarker = DateTime.Now - TimeSpan.FromMinutes(10);
+
+            ai.State = RobotAiState.AlertFollowUp;
+            Assert.True(ai.Can(RobotAiState.Searching));
+        }
     }
 }
