@@ -855,29 +855,6 @@ namespace TestRobot
             Assert.False(ai.Can(RobotAiState.SuspicionShrugOff));
         }
 
-
-        [Test]
-        public void TestSuspicionShrugOffCannotMoveToPatrolWhenTimedOutAndSeePlayer()
-        {
-            RobotAi ai = new MockRobotAi();
-            MockRobot robot = (MockRobot) ai.Robot;
-            MockPlayer player = (MockPlayer) ai.Player;
-
-            robot.CanHearPlayer = false;
-            robot.CanSeePlayer = true;
-            robot.DetectionLineOfSight = true;
-            robot.DetectionAudio = true;
-
-            robot.Location = new MockLocation(999, 999, 999);
-            player.Location = new MockLocation(1, 1, 1);
-
-            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
-            ai.TimeMarker = DateTime.Now - TimeSpan.FromMinutes(1);
-
-            ai.State = RobotAiState.SuspicionLookAround;
-            Assert.False(ai.Can(RobotAiState.SuspicionShrugOff));
-        }
-
         [Test]
         public void TestSuspicionShrugOffCanMoveToPatrol()
         {
@@ -896,8 +873,8 @@ namespace TestRobot
             ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
             ai.TimeMarker = DateTime.Now - TimeSpan.FromMinutes(1);
 
-            ai.State = RobotAiState.SuspicionLookAround;
-            Assert.True(ai.Can(RobotAiState.SuspicionShrugOff));
+            ai.State = RobotAiState.SuspicionShrugOff;
+            Assert.True(ai.Can(RobotAiState.Patrol));
         }
     }
 }

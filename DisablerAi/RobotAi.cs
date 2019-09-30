@@ -213,7 +213,7 @@ namespace DisablerAi
                     if (State == RobotAiState.SuspicionShrugOff)
                     {
                         // Wait for robot to return to beginning of patrol before starting patrol
-                        if (Robot.Location.DistanceFrom(Robot.PatrolStart) >= 1)
+                        if (Robot.Location.DistanceFrom(PlayerLocations.Last().Location) >= 1)
                         {
                             return false;
                         }
