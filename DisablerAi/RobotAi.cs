@@ -125,7 +125,7 @@ namespace DisablerAi
                             return true;
                         }
                     }
-                    
+
                     if (State == RobotAiState.Patrol)
                     {
                         float distance = Robot.Location.DistanceFrom(Player.Location);
@@ -398,8 +398,54 @@ namespace DisablerAi
                 default:
                     return false;
             }
+        }
 
-            return false;
+        /// <summary>
+        /// Target PatrolStart when we enter PatrolMarchToStart state
+        /// </summary>
+        private void ThinkPatrolMarchToStart()
+        {
+            Robot.Target = Robot.PatrolStart;
+        }
+
+        /// <summary>
+        /// Target PatrolEnd when we enter PatrolMarchToEnd state
+        /// </summary>
+        private void ThinkPatrolMarchToEnd()
+        {
+            Robot.Target = Robot.PatrolEnd;
+        }
+
+        /// <summary>
+        /// Track Look Around Starting Time
+        /// </summary>
+        private void ThinkPatrolLookAround()
+        {
+            TimeMarker = DateTime.Now;
+        }
+
+        public void Think()
+        {
+            var handlers = new Tuple<RobotAiState, Action>[]
+            {
+                new Tuple<RobotAiState, Action>(RobotAiState.Inactive, null),
+                new Tuple<RobotAiState, Action>(RobotAiState.Patrol, null),
+                new Tuple<RobotAiState, Action>(RobotAiState.PatrolMarchToStart, this.ThinkPatrolMarchToStart),
+                new Tuple<RobotAiState, Action>(RobotAiState.PatrolMarchToEnd, this.ThinkPatrolMarchToEnd),
+                new Tuple<RobotAiState, Action>(RobotAiState.PatrolLookAround, this.ThinkPatrolLookAround),
+            };
+
+            foreach (var handler in handlers)
+            {
+                if (!Can(handler.Item1))
+                {
+                    continue;
+                }
+
+                State = handler.Item1;
+                handler.Item2?.Invoke();
+                return;
+            }
         }
     }
 }

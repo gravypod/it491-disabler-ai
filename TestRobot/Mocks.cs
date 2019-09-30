@@ -24,6 +24,30 @@ namespace TestRobot
             return this._randomLocation ?? this;
         }
 
+        protected bool Equals(MockLocation other)
+        {
+            return _x.Equals(other._x) && _y.Equals(other._y) && _z.Equals(other._z);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MockLocation) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = _x.GetHashCode();
+                hashCode = (hashCode * 397) ^ _y.GetHashCode();
+                hashCode = (hashCode * 397) ^ _z.GetHashCode();
+                return hashCode;
+            }
+        }
+
         public float DistanceFrom(ILocation location)
         {
             if (location.GetType() == typeof(MockLocation))
