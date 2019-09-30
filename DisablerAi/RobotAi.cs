@@ -417,12 +417,12 @@ namespace DisablerAi
                         // Allow users to request marking even when sent to ground
                         if (MarkEnemiesRequested || MarkItemsRequested)
                             return false;
-                        
+
                         // When sent to ground, stay on ground
-                        return true;   
+                        return true;
                     }
-                        
-                    
+
+
                     // Player never asked us to get down. Don't get down
                     if (!GetDownRequested)
                         return false;
@@ -563,15 +563,19 @@ namespace DisablerAi
 
         public void Think()
         {
-            var handlers = new Tuple<RobotAiState, Action>[]
+            var handlers = new[]
             {
+                // Startup
+                new Tuple<RobotAiState, Action>(RobotAiState.Inactive, null),
+                // Pain
                 new Tuple<RobotAiState, Action>(RobotAiState.Disabled, ThinkDisable),
                 new Tuple<RobotAiState, Action>(RobotAiState.Hurt, ThinkHurt),
-                new Tuple<RobotAiState, Action>(RobotAiState.Inactive, null),
+                // Patrol
                 new Tuple<RobotAiState, Action>(RobotAiState.Patrol, null),
                 new Tuple<RobotAiState, Action>(RobotAiState.PatrolMarchToStart, ThinkPatrolMarchToStart),
                 new Tuple<RobotAiState, Action>(RobotAiState.PatrolMarchToEnd, ThinkPatrolMarchToEnd),
                 new Tuple<RobotAiState, Action>(RobotAiState.PatrolLookAround, ThinkPatrolLookAround),
+                // Hold Up
                 new Tuple<RobotAiState, Action>(RobotAiState.HeldUp, ThinkHeldUp),
                 new Tuple<RobotAiState, Action>(RobotAiState.HeldUpGetDown, ThinkHeldUpGetDown),
                 new Tuple<RobotAiState, Action>(RobotAiState.HeldUpRefuse, ThinkHeldUpRefuse),
