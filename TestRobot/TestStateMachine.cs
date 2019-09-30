@@ -36,8 +36,9 @@ namespace TestRobot
             ai.State = RobotAiState.Patrol;
 
             MockRobot robot = (MockRobot) ai.Robot;
-            robot.DistanceFromEndingOfPatrol = 0;
-            robot.DistanceFromBeginningOfPatrol = 100;
+            robot.Location = new MockLocation(1, 1, 1);
+            robot.PatrolStart = new MockLocation(100, 100, 100);
+            robot.PatrolEnd = new MockLocation(1, 1, 1);
 
             Assert.True(ai.Can(RobotAiState.PatrolMarchToStart));
         }
@@ -49,8 +50,9 @@ namespace TestRobot
             ai.State = RobotAiState.Patrol;
 
             MockRobot robot = (MockRobot) ai.Robot;
-            robot.DistanceFromEndingOfPatrol = 100;
-            robot.DistanceFromBeginningOfPatrol = 0;
+            robot.Location = new MockLocation(1, 1, 1);
+            robot.PatrolEnd = new MockLocation(100, 100, 100);
+            robot.PatrolStart = new MockLocation(1, 1, 1);
 
             Assert.True(ai.Can(RobotAiState.PatrolMarchToEnd));
         }
@@ -60,17 +62,18 @@ namespace TestRobot
         {
             RobotAi ai = new MockRobotAi();
             MockRobot robot = (MockRobot) ai.Robot;
+            robot.Location = new MockLocation(1, 1, 1);
 
             // Reached ending
             ai.State = RobotAiState.PatrolMarchToEnd;
-            robot.DistanceFromEndingOfPatrol = 0;
-            robot.DistanceFromBeginningOfPatrol = 100;
+            robot.PatrolStart = new MockLocation(100, 100, 100);
+            robot.PatrolEnd = new MockLocation(1, 1, 1);
             Assert.True(ai.Can(RobotAiState.PatrolLookAround));
 
             // Reached beginning
             ai.State = RobotAiState.PatrolMarchToStart;
-            robot.DistanceFromEndingOfPatrol = 100;
-            robot.DistanceFromBeginningOfPatrol = 0;
+            robot.PatrolEnd = new MockLocation(100, 100, 100);
+            robot.PatrolStart = new MockLocation(1, 1, 1);
             Assert.True(ai.Can(RobotAiState.PatrolLookAround));
         }
 
@@ -82,8 +85,9 @@ namespace TestRobot
 
             // Still need to continue walking
             ai.State = RobotAiState.PatrolMarchToStart;
-            robot.DistanceFromEndingOfPatrol = 50;
-            robot.DistanceFromBeginningOfPatrol = 50;
+            robot.Location = new MockLocation(50, 50, 50);
+            robot.PatrolEnd = new MockLocation(100, 100, 100);
+            robot.PatrolStart = new MockLocation(1, 1, 1);
             Assert.False(ai.Can(RobotAiState.PatrolLookAround));
         }
 
@@ -172,8 +176,8 @@ namespace TestRobot
             MockDisabler disabler = (MockDisabler) ai.Player.Disabler;
             MockRobot robot = (MockRobot) ai.Robot;
 
-            disabler.Location = new MockLocation(0, 0, 0);
-            robot.Head.Location = new MockLocation(0, 0, 0);
+            disabler.Location = new MockLocation(1, 1, 1);
+            robot.Head.Location = new MockLocation(1, 1, 1);
 
             Assert.True(ai.Can(RobotAiState.HeldUp));
         }
@@ -187,7 +191,7 @@ namespace TestRobot
             MockRobot robot = (MockRobot) ai.Robot;
 
             disabler.Location = new MockLocation(10, 10, 10);
-            robot.Head.Location = new MockLocation(0, 0, 0);
+            robot.Head.Location = new MockLocation(1, 1, 1);
 
             Assert.False(ai.Can(RobotAiState.HeldUp));
         }
@@ -300,8 +304,8 @@ namespace TestRobot
             MockRobot robot = (MockRobot) ai.Robot;
 
             ai.State = RobotAiState.Patrol;
-            player.Location = new MockLocation(0, 0, 0);
-            robot.Location = new MockLocation(0, 0, 0);
+            player.Location = new MockLocation(1, 1, 1);
+            robot.Location = new MockLocation(1, 1, 1);
             robot.DetectionLineOfSight = true;
             robot.CanSeePlayer = true;
 
@@ -317,7 +321,7 @@ namespace TestRobot
 
             ai.State = RobotAiState.Patrol;
             player.Location = new MockLocation(100, 100, 100);
-            robot.Location = new MockLocation(0, 0, 0);
+            robot.Location = new MockLocation(1, 1, 1);
             robot.DetectionLineOfSight = true;
             robot.CanSeePlayer = true;
 
@@ -355,8 +359,6 @@ namespace TestRobot
         public void TestAlertAttackCanMoveToAlertRepositionAfter1To3Bursts()
         {
             RobotAi ai = new MockRobotAi();
-            MockPlayer player = (MockPlayer) ai.Player;
-            MockRobot robot = (MockRobot) ai.Robot;
 
             ai.State = RobotAiState.AlertAttack;
 
@@ -395,13 +397,12 @@ namespace TestRobot
         public void TestAlertAttackAndAlertRepositionLostSightOfPlayerCanMoveToFollowUp()
         {
             RobotAi ai = new MockRobotAi();
-            MockPlayer player = (MockPlayer) ai.Player;
             MockRobot robot = (MockRobot) ai.Robot;
 
 
             robot.CanSeePlayer = false;
             robot.DetectionLineOfSight = true;
-            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, new MockLocation(10, 10, 10)));
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, new MockLocation(10, 10, 10), true, true));
 
             ai.State = RobotAiState.AlertAttack;
             Assert.True(ai.Can(RobotAiState.AlertFollowUp));
@@ -418,10 +419,10 @@ namespace TestRobot
             MockRobot robot = (MockRobot) ai.Robot;
 
             player.Location = new MockLocation(100, 100, 100);
-            robot.Location = new MockLocation(0, 0, 0);
+            robot.Location = new MockLocation(1, 1, 1);
             robot.CanSeePlayer = true;
             robot.DetectionLineOfSight = true;
-            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, player.Location));
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, player.Location, true, true));
 
             ai.State = RobotAiState.AlertAttack;
             Assert.True(ai.Can(RobotAiState.AlertFollowUp));
@@ -437,11 +438,11 @@ namespace TestRobot
             MockPlayer player = (MockPlayer) ai.Player;
             MockRobot robot = (MockRobot) ai.Robot;
 
-            player.Location = new MockLocation(0, 0, 0);
-            robot.Location = new MockLocation(0, 0, 0);
+            player.Location = new MockLocation(1, 1, 1);
+            robot.Location = new MockLocation(1, 1, 1);
             robot.CanSeePlayer = true;
             robot.DetectionLineOfSight = true;
-            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, player.Location));
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, player.Location, true, true));
 
             ai.State = RobotAiState.AlertAttack;
             Assert.False(ai.Can(RobotAiState.AlertFollowUp));
@@ -455,10 +456,9 @@ namespace TestRobot
         public void TestAlertRepositionCanMoveToAttackWhenReachedTargetAndAfter2Seconds()
         {
             RobotAi ai = new MockRobotAi();
-            MockPlayer player = (MockPlayer) ai.Player;
             MockRobot robot = (MockRobot) ai.Robot;
 
-            robot.Target = robot.Location = new MockLocation(0, 0, 0);
+            robot.Target = robot.Location = new MockLocation(1, 1, 1);
             ai.TimeMarker = DateTime.Now - TimeSpan.FromSeconds(3);
 
             ai.State = RobotAiState.AlertReposition;
@@ -471,7 +471,7 @@ namespace TestRobot
             RobotAi ai = new MockRobotAi();
             MockRobot robot = (MockRobot) ai.Robot;
 
-            robot.Target = robot.Location = new MockLocation(0, 0, 0);
+            robot.Target = robot.Location = new MockLocation(1, 1, 1);
             ai.TimeMarker = DateTime.Now - TimeSpan.FromSeconds(1);
 
             ai.State = RobotAiState.AlertReposition;
@@ -484,7 +484,7 @@ namespace TestRobot
             RobotAi ai = new MockRobotAi();
             MockRobot robot = (MockRobot) ai.Robot;
 
-            robot.Location = new MockLocation(0, 0, 0);
+            robot.Location = new MockLocation(1, 1, 1);
             robot.Target = new MockLocation(100, 100, 100);
             ai.TimeMarker = DateTime.Now - TimeSpan.FromSeconds(10);
 
@@ -578,6 +578,326 @@ namespace TestRobot
             robot.Health = 100;
             ai.State = RobotAiState.Patrol;
             Assert.False(ai.Can(RobotAiState.Hurt));
+        }
+
+        // Suspicion Unit Tests
+        [Test]
+        public void TestPatrolCanMoveToSuspicionWhenSeenAndGreaterThan15MetersAwayAndLessThan50MetersAway()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = true;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(21, 1, 1);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.State = RobotAiState.Patrol;
+            Assert.True(ai.Can(RobotAiState.Suspicion));
+        }
+
+        [Test]
+        public void TestPatrolCannotMoveToSuspicionWhenSeenAndLessThan15Meters()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = true;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(11, 1, 1);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.State = RobotAiState.Patrol;
+            Assert.False(ai.Can(RobotAiState.Suspicion));
+        }
+
+        [Test]
+        public void TestPatrolCanMoveToSuspicionWhenHeardAndUnder40MetersAway()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = true;
+            robot.CanSeePlayer = false;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(21, 1, 1);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.State = RobotAiState.Patrol;
+            Assert.True(ai.Can(RobotAiState.Suspicion));
+        }
+
+        [Test]
+        public void TestSuspicionCanMoveToCallHeadQuartersWhenSeenUnder50MetersAway()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = true;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(21, 1, 1);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.State = RobotAiState.Suspicion;
+            Assert.True(ai.Can(RobotAiState.SuspicionCallHeadQuarters));
+        }
+
+
+        [Test]
+        public void TestSuspicionCanMoveToCallHeadQuartersWhenHeard3Times()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = false;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            for (int i = 0; i < 3; i++)
+                ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, new MockLocation(), false, true));
+
+            ai.State = RobotAiState.Suspicion;
+            Assert.True(ai.Can(RobotAiState.SuspicionCallHeadQuarters));
+        }
+
+
+        [Test]
+        public void TestSuspicionCannotMoveToCallHeadQuartersWhenHeard2Times()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = false;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            for (int i = 0; i < 2; i++)
+                ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, new MockLocation(), false, true));
+
+            ai.State = RobotAiState.Suspicion;
+            Assert.False(ai.Can(RobotAiState.SuspicionCallHeadQuarters));
+        }
+
+        [Test]
+        public void TestSuspicionCannotMoveToCallHeadQuartersWhenNeverSeenOrHeard()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = false;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.State = RobotAiState.Suspicion;
+            Assert.False(ai.Can(RobotAiState.SuspicionCallHeadQuarters));
+        }
+
+
+        [Test]
+        public void TestSuspicionCanMoveToFollowUp()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = true;
+            robot.CanSeePlayer = false;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, new MockLocation(), false, true));
+
+            ai.State = RobotAiState.Suspicion;
+            Assert.True(ai.Can(RobotAiState.SuspicionFollowUp));
+        }
+
+        [Test]
+        public void TestSuspicionFollowUpCanMoveToLookAround()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = true;
+            robot.CanSeePlayer = false;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
+
+            ai.State = RobotAiState.SuspicionFollowUp;
+            Assert.True(ai.Can(RobotAiState.SuspicionLookAround));
+        }
+
+
+        [Test]
+        public void TestSuspicionFollowUpCannotMoveToLookAroundIfWeHaveNotReachedTarget()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = true;
+            robot.CanSeePlayer = false;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, new MockLocation(10, 10, 10), false, true));
+
+            ai.State = RobotAiState.SuspicionFollowUp;
+            Assert.False(ai.Can(RobotAiState.SuspicionLookAround));
+        }
+
+
+        [Test]
+        public void TestSuspicionLookAroundCanShrugOffIfCannotSeePlayerAtLastLocation()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = false;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
+            ai.TimeMarker = DateTime.Now - TimeSpan.FromMinutes(1);
+
+            ai.State = RobotAiState.SuspicionLookAround;
+            Assert.True(ai.Can(RobotAiState.SuspicionShrugOff));
+        }
+
+        [Test]
+        public void TestSuspicionLookAroundCannotShrugOffIfCanSeePlayerAtLastLocation()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = true;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
+            ai.TimeMarker = DateTime.Now - TimeSpan.FromMinutes(1);
+
+            ai.State = RobotAiState.SuspicionLookAround;
+            Assert.False(ai.Can(RobotAiState.SuspicionShrugOff));
+        }
+
+
+        [Test]
+        public void TestSuspicionLookAroundCannotShrugOffIfLookAroundTimeoutNotExpired()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = false;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
+            ai.TimeMarker = DateTime.Now;
+
+            ai.State = RobotAiState.SuspicionLookAround;
+            Assert.False(ai.Can(RobotAiState.SuspicionShrugOff));
+        }
+
+
+        [Test]
+        public void TestSuspicionShrugOffCannotMoveToPatrolWhenTimedOutAndSeePlayer()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = true;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
+            ai.TimeMarker = DateTime.Now - TimeSpan.FromMinutes(1);
+
+            ai.State = RobotAiState.SuspicionLookAround;
+            Assert.False(ai.Can(RobotAiState.SuspicionShrugOff));
+        }
+
+        [Test]
+        public void TestSuspicionShrugOffCanMoveToPatrol()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.CanHearPlayer = false;
+            robot.CanSeePlayer = false;
+            robot.DetectionLineOfSight = true;
+            robot.DetectionAudio = true;
+
+            robot.Location = new MockLocation(999, 999, 999);
+            player.Location = new MockLocation(1, 1, 1);
+
+            ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
+            ai.TimeMarker = DateTime.Now - TimeSpan.FromMinutes(1);
+
+            ai.State = RobotAiState.SuspicionLookAround;
+            Assert.True(ai.Can(RobotAiState.SuspicionShrugOff));
         }
     }
 }

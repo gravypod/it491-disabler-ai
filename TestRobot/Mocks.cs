@@ -78,6 +78,8 @@ namespace TestRobot
     {
         public ILocation Location { get; set; }
         public ILocation Target { get; set; }
+        public ILocation PatrolStart { get; set; }
+        public ILocation PatrolEnd { get; set; }
         public RobotAnimation PlayingAnimation { get; set; }
         public bool DetectionLineOfSight { get; set; }
         public bool DetectionAudio { get; set; }
@@ -87,8 +89,6 @@ namespace TestRobot
         public float Health { get; set; }
 
 
-        public float DistanceFromBeginningOfPatrol { get; set; }
-        public float DistanceFromEndingOfPatrol { get; set; }
         public bool CanSeePlayer { get; set; }
         public bool CanHearPlayer { get; set; }
 
@@ -104,13 +104,11 @@ namespace TestRobot
             this.PlayingAnimation = RobotAnimation.None;
             this.CanSeePlayer = false;
             this.CanHearPlayer = false;
-            this.DistanceFromBeginningOfPatrol = 0.0f;
-            this.DistanceFromEndingOfPatrol = 0.0f;
             this.DetectionLineOfSight = true;
             this.DetectionAudio = true;
 
             // Provided values
-            this.Location = location ?? new MockLocation();
+            this.PatrolStart = this.PatrolEnd = this.Location = location ?? new MockLocation();
             this.HitWithItem = hitWithItem;
             this.Health = health;
             this.Shot = shot;
@@ -130,16 +128,6 @@ namespace TestRobot
             if (!this.DetectionAudio)
                 return false;
             return CanHearPlayer;
-        }
-
-        float IRobot.DistanceFromBeginningOfPatrol()
-        {
-            return DistanceFromBeginningOfPatrol;
-        }
-
-        float IRobot.DistanceFromEndingOfPatrol()
-        {
-            return DistanceFromEndingOfPatrol;
         }
 
         public bool ReachedTarget(float distanceForgiveness = 0.5f)

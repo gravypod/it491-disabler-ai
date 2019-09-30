@@ -5,6 +5,9 @@ namespace DisablerAi.Interfaces
         ILocation Location { get; set; }
         ILocation Target { get; set; }
 
+        ILocation PatrolStart { get; set; }
+        ILocation PatrolEnd { get; set; }
+
         // Acting
         RobotAnimation PlayingAnimation { get; set; }
 
@@ -21,11 +24,7 @@ namespace DisablerAi.Interfaces
         // Visibility Checks
         bool CanSee(IPlayer player);
         bool CanHear(IPlayer player);
-
-        // Space Checks
-        float DistanceFromBeginningOfPatrol();
-        float DistanceFromEndingOfPatrol();
-
+        
         /// <summary>
         /// Check to see if this robot has reached it's target
         /// </summary>
