@@ -37,7 +37,7 @@ namespace DisablerAi
                     return false;
                 case RobotAiState.Inactive:
                     return this.State == RobotAiState.Start;
-            
+
                 // Searching State Machine
                 case RobotAiState.Searching:
 
@@ -48,13 +48,20 @@ namespace DisablerAi
                             if ((DateTime.Now - TimeMarker).TotalMinutes >= 1)
                                 return true;
                         }
-
                     }
 
                     if (State == RobotAiState.SuspicionCallHeadQuarters)
                         return true;
-                    
+
                     return false;
+
+                case RobotAiState.SearchingFollowUpPointOfInterest:
+                    if (State == RobotAiState.Searching)
+                    {
+                        return true;
+                    }
+
+                    return true;
 
                 // Alert State Machine
                 case RobotAiState.Alert:
@@ -123,7 +130,7 @@ namespace DisablerAi
                 case RobotAiState.Suspicion:
                     if (this.State == RobotAiState.Patrol)
                     {
-                        float distance = Robot.Location.DistanceFrom(Player.Location) ;
+                        float distance = Robot.Location.DistanceFrom(Player.Location);
                         if (Robot.CanSee(Player) && distance > 14 && distance < 50)
                             return true;
 
@@ -155,7 +162,7 @@ namespace DisablerAi
                 case RobotAiState.SuspicionLookAround:
                     if (State == RobotAiState.SuspicionFollowUp)
                     {
-                        float distance = Robot.Location.DistanceFrom(PlayerLocations.Last().Location); 
+                        float distance = Robot.Location.DistanceFrom(PlayerLocations.Last().Location);
                         // Look around rapidly after we've moved the player's last known location
                         if (distance <= 1)
                         {
@@ -172,7 +179,7 @@ namespace DisablerAi
                         {
                             return false;
                         }
-                        
+
                         // If we can't see the player for 10 seconds after walking to the last location and looking 
                         // around, give up and go back to patrol
                         if ((DateTime.Now - TimeMarker).TotalSeconds > 10)
@@ -243,7 +250,8 @@ namespace DisablerAi
                     if (State == RobotAiState.Patrol)
                     {
                         // Walk to the beginning if we're far away from it
-                        return Robot.Location.DistanceFrom(Robot.PatrolStart) > Robot.Location.DistanceFrom(Robot.PatrolEnd);
+                        return Robot.Location.DistanceFrom(Robot.PatrolStart) >
+                               Robot.Location.DistanceFrom(Robot.PatrolEnd);
                     }
 
                     return false;
@@ -252,7 +260,8 @@ namespace DisablerAi
                     if (State == RobotAiState.Patrol)
                     {
                         // Walk to the ending if we're far away from it
-                        return Robot.Location.DistanceFrom(Robot.PatrolStart) < Robot.Location.DistanceFrom(Robot.PatrolEnd);
+                        return Robot.Location.DistanceFrom(Robot.PatrolStart) <
+                               Robot.Location.DistanceFrom(Robot.PatrolEnd);
                     }
 
                     return false;

@@ -905,5 +905,12 @@ namespace TestRobot
             ai.State = RobotAiState.AlertFollowUp;
             Assert.True(ai.Can(RobotAiState.Searching));
         }
+
+        [Test] public void TestSearchingCanMoveToFollowUpPointOfInterest()
+        {
+            RobotAi ai = new MockRobotAi();
+            ai.State = RobotAiState.Searching;
+            Assert.True(ai.Can(RobotAiState.SearchingFollowUpPointOfInterest));
+        }
     }
 }

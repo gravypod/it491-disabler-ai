@@ -19,6 +19,7 @@ namespace DisablerAi
         SuspicionLookAround,
         SuspicionShrugOff,
         Searching,
+        SearchingFollowUpPointOfInterest,
         HeldUp,
         HeldUpDemandMarkAmmo,
         HeldUpDemandMarkEnemies,

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace DisablerAi.Interfaces
 {
     public interface IRobot
@@ -7,6 +9,8 @@ namespace DisablerAi.Interfaces
 
         ILocation PatrolStart { get; set; }
         ILocation PatrolEnd { get; set; }
+
+        List<ILocation> PointsOfInterest { get; set; }
 
         // Acting
         RobotAnimation PlayingAnimation { get; set; }
@@ -24,7 +28,7 @@ namespace DisablerAi.Interfaces
         // Visibility Checks
         bool CanSee(IPlayer player);
         bool CanHear(IPlayer player);
-        
+
         /// <summary>
         /// Check to see if this robot has reached it's target
         /// </summary>

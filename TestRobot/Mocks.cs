@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DisablerAi;
 using DisablerAi.Interfaces;
 
@@ -80,6 +81,7 @@ namespace TestRobot
         public ILocation Target { get; set; }
         public ILocation PatrolStart { get; set; }
         public ILocation PatrolEnd { get; set; }
+        public List<ILocation> PointsOfInterest { get; set; } = new List<ILocation>();
         public RobotAnimation PlayingAnimation { get; set; }
         public bool DetectionLineOfSight { get; set; }
         public bool DetectionAudio { get; set; }
