@@ -63,6 +63,71 @@ namespace TestRobot
         }
 
         [Test]
+        public void TestHoldUpMarkItemsRefuseSecondTime()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+            MockRobot otherRobot = new MockRobot();
+
+            robot.Head.Location = player.Disabler.Location = new MockLocation();
+            ai.State = RobotAiState.HeldUp;
+            ai.MarkItemsRequested = true;
+            ai.Think();
+            Assert.AreEqual(RobotAiState.HeldUpDemandMarkAmmo, ai.State);
+
+            ai.Think();
+            Assert.AreEqual(RobotAiState.HeldUp, ai.State);
+
+            ai.MarkEnemiesRequested = true;
+            ai.Think();
+            Assert.AreEqual(RobotAiState.HeldUpRefuse, ai.State);
+        }
+
+        [Test]
+        public void TestHoldUpDontMarkFarAwayItem()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+            MockItem item = new MockItem(new MockLocation(999, 999, 999));
+
+            robot.Head.Location = player.Disabler.Location = new MockLocation();
+            ai.State = RobotAiState.HeldUp;
+            ai.MarkItemsRequested = true;
+
+            // Item within reach
+            player.Items.Add(item);
+            ai.Think();
+
+            Assert.AreEqual(RobotAiState.HeldUpDemandMarkAmmo, ai.State);
+            Assert.False(item.HasBeenMarkedForPlayer);
+        }
+
+        [Test]
+        public void TestHoldUpMarkMaxThreeItems()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.Head.Location = player.Disabler.Location = new MockLocation();
+            ai.State = RobotAiState.HeldUp;
+            ai.MarkItemsRequested = true;
+
+            // Item within reach
+            for (int i = 0; i < 10; i++)
+            {
+                player.Items.Add(new MockItem(robot.Location));
+            }
+
+            ai.Think();
+
+            Assert.AreEqual(RobotAiState.HeldUpDemandMarkAmmo, ai.State);
+            Assert.AreEqual(3, player.Items.Count(item => ((MockItem) item).HasBeenMarkedForPlayer));
+        }
+
+        [Test]
         public void TestHoldUpMarkEnemy()
         {
             RobotAi ai = new MockRobotAi();
@@ -82,6 +147,55 @@ namespace TestRobot
             Assert.True(otherRobot.HasBeenMarkedForPlayer);
             Assert.False(robot.HasBeenMarkedForPlayer);
         }
+
+        [Test]
+        public void TestHoldUpMarkEnemyRefuseSecondTime()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+            MockRobot otherRobot = new MockRobot();
+
+            robot.Head.Location = player.Disabler.Location = new MockLocation();
+            ai.State = RobotAiState.HeldUp;
+            ai.MarkEnemiesRequested = true;
+            ai.Think();
+            Assert.AreEqual(RobotAiState.HeldUpDemandMarkEnemies, ai.State);
+
+            ai.Think();
+            Assert.AreEqual(RobotAiState.HeldUp, ai.State);
+
+            ai.MarkEnemiesRequested = true;
+            ai.Think();
+            Assert.AreEqual(RobotAiState.HeldUpRefuse, ai.State);
+        }
+
+
+        [Test]
+        public void TestHoldUpMarkThreeEnemyMaximum()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+
+            robot.Head.Location = player.Disabler.Location = new MockLocation();
+            ai.State = RobotAiState.HeldUp;
+            ai.MarkEnemiesRequested = true;
+
+            player.Robots.Add(robot);
+
+            for (int i = 0; i < 3; i++)
+            {
+                player.Robots.Add(new MockRobot());
+            }
+
+            ai.Think();
+
+            Assert.AreEqual(RobotAiState.HeldUpDemandMarkEnemies, ai.State);
+            Assert.False(robot.HasBeenMarkedForPlayer);
+            Assert.AreEqual(3, player.Robots.Count(r => ((MockRobot) r).HasBeenMarkedForPlayer));
+        }
+
 
         [Test]
         public void TestHoldUpMarkEnemyReturnToHeldUp()
@@ -105,6 +219,26 @@ namespace TestRobot
 
             ai.Think();
             Assert.AreEqual(RobotAiState.HeldUp, ai.State);
+        }
+
+        [Test]
+        public void TestHoldUpDontMarkFarEnemy()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+            MockPlayer player = (MockPlayer) ai.Player;
+            MockRobot otherRobot = new MockRobot(new MockLocation(999, 999, 999));
+
+            robot.Head.Location = player.Disabler.Location = new MockLocation();
+            ai.State = RobotAiState.HeldUp;
+            ai.MarkEnemiesRequested = true;
+            player.Robots.Add(robot);
+            player.Robots.Add(otherRobot);
+            ai.Think();
+
+            Assert.AreEqual(RobotAiState.HeldUpDemandMarkEnemies, ai.State);
+            Assert.False(otherRobot.HasBeenMarkedForPlayer);
+            Assert.False(robot.HasBeenMarkedForPlayer);
         }
 
         [Test]

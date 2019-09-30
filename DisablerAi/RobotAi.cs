@@ -527,7 +527,10 @@ namespace DisablerAi
             MarkItemsRequested = false;
             HasHeldUpDemandBeenMade = true;
             int remainingToMark = 3;
-            foreach (var item in Player.NearestItems())
+            var nearEnoughItems = Player
+                .NearestItems()
+                .Where(item => item.Location.DistanceFrom(Robot.Location) <= 100);
+            foreach (var item in nearEnoughItems)
             {
                 if (remainingToMark <= 0)
                     return;
@@ -542,7 +545,10 @@ namespace DisablerAi
             MarkEnemiesRequested = false;
             HasHeldUpDemandBeenMade = true;
             int remainingToMark = 3;
-            foreach (var robot in Player.NearestRobots())
+            var nearEnoughRobots = Player
+                .NearestRobots()
+                .Where(robot => robot.Location.DistanceFrom(Robot.Location) <= 75);
+            foreach (var robot in nearEnoughRobots)
             {
                 if (Robot == robot)
                     continue;
