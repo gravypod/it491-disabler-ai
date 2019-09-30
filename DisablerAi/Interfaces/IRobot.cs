@@ -35,5 +35,11 @@ namespace DisablerAi.Interfaces
         /// <param name="distanceForgiveness">How far, in meters, from the target before this returns true</param>
         /// <returns>true when the robot is within distanceForgiveness from it's target</returns>
         bool ReachedTarget(float distanceForgiveness = 0.5f);
+
+        /// <summary>
+        /// Mark the item as visible for  the player
+        /// </summary>
+        void MarkForPlayer();
+        
     }
 }

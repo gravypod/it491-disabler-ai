@@ -7,6 +7,8 @@ namespace DisablerAi
         HurtStagger,
         LookAround,
         AlertCallHeadQuarters,
-        CoweringOnGround,
+        CoweringOnGround, // Laying on ground
+        CoweringStanding, // Hands up
+        CoweringRefuse, // Asked for two holdup demands
     }
 }

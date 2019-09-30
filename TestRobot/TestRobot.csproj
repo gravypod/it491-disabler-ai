@@ -52,6 +52,7 @@
     <Compile Include="Mocks.cs" />
     <Compile Include="CanEnterSearchingStates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ThinkHeldUp.cs" />
     <Compile Include="ThinkPain.cs" />
     <Compile Include="ThinkInactive.cs" />
     <Compile Include="ThinkPatrol.cs" />

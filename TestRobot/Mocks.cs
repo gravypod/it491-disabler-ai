@@ -5,6 +5,22 @@ using DisablerAi.Interfaces;
 
 namespace TestRobot
 {
+    class MockItem : IItem
+    {
+        public ILocation Location { get; set; }
+        public bool HasBeenMarkedForPlayer { get; set; } = false;
+
+        public MockItem(ILocation location)
+        {
+            this.Location = location;
+        }
+
+        public void MarkForPlayer()
+        {
+            HasBeenMarkedForPlayer = true;
+        }
+    }
+
     class MockLocation : ILocation
     {
         private readonly float _x, _y, _z;
@@ -79,6 +95,19 @@ namespace TestRobot
         public IDisabler Disabler { get; set; }
         public ILocation Location { get; set; }
 
+        public List<IRobot> Robots = new List<IRobot>();
+        public List<IItem> Items = new List<IItem>();
+
+        public List<IRobot> NearestRobots()
+        {
+            return Robots;
+        }
+
+        public List<IItem> NearestItems()
+        {
+            return Items;
+        }
+
         public MockPlayer(IDisabler disabler, ILocation location)
         {
             this.Disabler = disabler;
@@ -113,6 +142,8 @@ namespace TestRobot
         public bool HitWithItem { get; set; }
         public IRobotHead Head { get; }
         public int Health { get; set; }
+
+        public bool HasBeenMarkedForPlayer { get; set; } = false;
 
 
         public bool CanSeePlayer { get; set; }
@@ -159,6 +190,11 @@ namespace TestRobot
         public bool ReachedTarget(float distanceForgiveness = 0.5f)
         {
             return this.Location.DistanceFrom(this.Target) <= distanceForgiveness;
+        }
+
+        public void MarkForPlayer()
+        {
+            HasBeenMarkedForPlayer = true;
         }
     }
 

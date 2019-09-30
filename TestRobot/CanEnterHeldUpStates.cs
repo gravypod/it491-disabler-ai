@@ -63,6 +63,7 @@ namespace TestRobot
         {
             RobotAi ai = new MockRobotAi();
             ai.State = RobotAiState.HeldUp;
+            ai.MarkItemsRequested = true;
             Assert.True(ai.Can(RobotAiState.HeldUpDemandMarkAmmo));
         }
 
@@ -72,6 +73,7 @@ namespace TestRobot
         {
             RobotAi ai = new MockRobotAi();
             ai.State = RobotAiState.HeldUp;
+            ai.MarkEnemiesRequested = true;
             Assert.True(ai.Can(RobotAiState.HeldUpDemandMarkEnemies));
         }
 
@@ -80,7 +82,7 @@ namespace TestRobot
         {
             RobotAi ai = new MockRobotAi();
             ai.State = RobotAiState.HeldUp;
-            ai.HoldUpDemandMade = true;
+            ai.HasHeldUpDemandBeenMade = true;
             Assert.False(ai.Can(RobotAiState.HeldUpDemandMarkEnemies));
             Assert.False(ai.Can(RobotAiState.HeldUpDemandMarkAmmo));
         }
@@ -90,7 +92,7 @@ namespace TestRobot
         {
             RobotAi ai = new MockRobotAi();
             ai.State = RobotAiState.HeldUp;
-            ai.HoldUpDemandMade = true;
+            ai.HasHeldUpDemandBeenMade = true;
             Assert.True(ai.Can(RobotAiState.HeldUpRefuse));
         }
 
@@ -98,7 +100,7 @@ namespace TestRobot
         public void TestHeldUpSubStatesCanMoveToHeldUp()
         {
             RobotAi ai = new MockRobotAi();
-            ai.HoldUpDemandMade = false;
+            ai.HasHeldUpDemandBeenMade = false;
 
             ai.State = RobotAiState.HeldUpRefuse;
             Assert.True(ai.Can(RobotAiState.HeldUp));
@@ -117,8 +119,9 @@ namespace TestRobot
             MockRobot robot = (MockRobot) ai.Robot;
 
             robot.PlayingAnimation = RobotAnimation.CoweringOnGround;
-            ai.HoldUpDemandMade = false;
-
+            ai.HasHeldUpDemandBeenMade = false;
+            ai.MarkEnemiesRequested = ai.MarkItemsRequested = ai.GetDownRequested = true;
+            
             ai.State = RobotAiState.HeldUpRefuse;
             Assert.True(ai.Can(RobotAiState.HeldUpGetDown));
 
@@ -136,7 +139,7 @@ namespace TestRobot
             MockRobot robot = (MockRobot) ai.Robot;
 
             robot.PlayingAnimation = RobotAnimation.None;
-            ai.HoldUpDemandMade = false;
+            ai.HasHeldUpDemandBeenMade = false;
 
             ai.State = RobotAiState.HeldUpRefuse;
             Assert.False(ai.Can(RobotAiState.HeldUpGetDown));
@@ -152,7 +155,7 @@ namespace TestRobot
         public void TestHeldUpGetDownCannotMoveToHeldUp()
         {
             RobotAi ai = new MockRobotAi();
-            ai.HoldUpDemandMade = false;
+            ai.HasHeldUpDemandBeenMade = false;
             ai.State = RobotAiState.HeldUpGetDown;
             Assert.False(ai.Can(RobotAiState.HeldUp));
         }

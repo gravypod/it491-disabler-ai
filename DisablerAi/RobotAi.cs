@@ -7,7 +7,8 @@ namespace DisablerAi
 {
     public class RobotAi
     {
-        public bool HoldUpDemandMade { get; set; } = false;
+        public bool HasHeldUpDemandBeenMade { get; set; } = false;
+        public bool HasHeldUpSentToGround { get; set; } = false;
         public IRobot Robot { get; set; }
         public IPlayer Player { get; set; }
         public RobotAiState State { get; set; }
@@ -15,6 +16,8 @@ namespace DisablerAi
         public DateTime TimeMarker = DateTime.Now;
         public int BurstsFired = 0;
 
+
+        public bool GetDownRequested = false, MarkItemsRequested = false, MarkEnemiesRequested = false;
 
         /// <summary>
         /// A list of times we think we've seen or heard the player.
@@ -352,26 +355,78 @@ namespace DisablerAi
                     if (State == RobotAiState.HeldUpGetDown)
                         return false;
 
+                    // Cannot be held up when being held up
+                    if (State == RobotAiState.HeldUp)
+                        return false;
+
+                    // While we are refusing, don't switch back to held up
+                    if (Robot.PlayingAnimation == RobotAnimation.CoweringRefuse)
+                    {
+                        if (State == RobotAiState.HeldUpRefuse)
+                            return false;
+                    }
+
+                    if (Robot.PlayingAnimation == RobotAnimation.CoweringOnGround)
+                    {
+                        if (State == RobotAiState.HeldUpDemandMarkAmmo)
+                            return false;
+
+                        if (State == RobotAiState.HeldUpDemandMarkEnemies)
+                            return false;
+                    }
+
+
                     // Can only hold up Player if it's disabler is <7m from the Head of this Robot
                     return Player.Disabler.Location.DistanceFrom(Robot.Head.Location) <= 7;
                 case RobotAiState.HeldUpRefuse:
                     if (State == RobotAiState.HeldUp || State == RobotAiState.HeldUpGetDown)
                     {
-                        if (HoldUpDemandMade)
+                        if (HasHeldUpDemandBeenMade)
                             return true;
                     }
 
                     return false;
                 case RobotAiState.HeldUpDemandMarkAmmo:
-                case RobotAiState.HeldUpDemandMarkEnemies:
-                    if (State == RobotAiState.HeldUp || State == RobotAiState.HeldUpGetDown)
-                    {
-                        if (!HoldUpDemandMade)
-                            return true;
-                    }
+                    // Player never asked us to get down. Don't get down
+                    if (!MarkItemsRequested)
+                        return false;
 
-                    return false;
+                    if (State != RobotAiState.HeldUp && State != RobotAiState.HeldUpGetDown)
+                        return false;
+
+                    if (HasHeldUpDemandBeenMade)
+                        return false;
+
+                    return true;
+
+                case RobotAiState.HeldUpDemandMarkEnemies:
+                    // Player never asked us to get down. Don't get down
+                    if (!MarkEnemiesRequested)
+                        return false;
+
+                    if (State != RobotAiState.HeldUp && State != RobotAiState.HeldUpGetDown)
+                        return false;
+
+                    if (HasHeldUpDemandBeenMade)
+                        return false;
+
+                    return true;
                 case RobotAiState.HeldUpGetDown:
+                    if (HasHeldUpSentToGround)
+                    {
+                        // Allow users to request marking even when sent to ground
+                        if (MarkEnemiesRequested || MarkItemsRequested)
+                            return false;
+                        
+                        // When sent to ground, stay on ground
+                        return true;   
+                    }
+                        
+                    
+                    // Player never asked us to get down. Don't get down
+                    if (!GetDownRequested)
+                        return false;
+
                     if (State == RobotAiState.HeldUp)
                         return true;
 
@@ -436,13 +491,68 @@ namespace DisablerAi
             Robot.Health -= 1;
         }
 
-
         private void ThinkDisable()
         {
             Robot.PlayingAnimation = RobotAnimation.RagDoll;
             Robot.Health = 0;
             Robot.DetectionLineOfSight = false;
             Robot.DetectionAudio = false;
+        }
+
+        private void ThinkHeldUp()
+        {
+            Robot.PlayingAnimation = RobotAnimation.CoweringStanding;
+            Robot.Target = null;
+            Robot.DetectionLineOfSight = false;
+            Robot.DetectionAudio = false;
+        }
+
+        private void ThinkHeldUpGetDown()
+        {
+            Robot.PlayingAnimation = RobotAnimation.CoweringOnGround;
+            HasHeldUpSentToGround = true;
+            GetDownRequested = false;
+            Robot.DetectionLineOfSight = false;
+            Robot.DetectionAudio = false;
+        }
+
+        private void ThinkHeldUpRefuse()
+        {
+            Robot.PlayingAnimation = RobotAnimation.CoweringRefuse;
+            MarkEnemiesRequested = MarkItemsRequested = false;
+        }
+
+        private void ThinkHeldUpMarkAmmo()
+        {
+            MarkItemsRequested = false;
+            HasHeldUpDemandBeenMade = true;
+            int remainingToMark = 3;
+            foreach (var item in Player.NearestItems())
+            {
+                if (remainingToMark <= 0)
+                    return;
+
+                item.MarkForPlayer();
+                remainingToMark--;
+            }
+        }
+
+        private void ThinkHeldUpMarkEnemies()
+        {
+            MarkEnemiesRequested = false;
+            HasHeldUpDemandBeenMade = true;
+            int remainingToMark = 3;
+            foreach (var robot in Player.NearestRobots())
+            {
+                if (Robot == robot)
+                    continue;
+
+                if (remainingToMark <= 0)
+                    return;
+
+                robot.MarkForPlayer();
+                remainingToMark--;
+            }
         }
 
         public void Think()
@@ -456,6 +566,11 @@ namespace DisablerAi
                 new Tuple<RobotAiState, Action>(RobotAiState.PatrolMarchToStart, ThinkPatrolMarchToStart),
                 new Tuple<RobotAiState, Action>(RobotAiState.PatrolMarchToEnd, ThinkPatrolMarchToEnd),
                 new Tuple<RobotAiState, Action>(RobotAiState.PatrolLookAround, ThinkPatrolLookAround),
+                new Tuple<RobotAiState, Action>(RobotAiState.HeldUp, ThinkHeldUp),
+                new Tuple<RobotAiState, Action>(RobotAiState.HeldUpGetDown, ThinkHeldUpGetDown),
+                new Tuple<RobotAiState, Action>(RobotAiState.HeldUpRefuse, ThinkHeldUpRefuse),
+                new Tuple<RobotAiState, Action>(RobotAiState.HeldUpDemandMarkAmmo, ThinkHeldUpMarkAmmo),
+                new Tuple<RobotAiState, Action>(RobotAiState.HeldUpDemandMarkEnemies, ThinkHeldUpMarkEnemies),
             };
 
             foreach (var handler in handlers)

@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interfaces\IItem.cs" />
     <Compile Include="Interfaces\ILocation.cs" />
     <Compile Include="PlayerLocation.cs" />
     <Compile Include="RobotAi.cs" />
