@@ -42,8 +42,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CanEnterAlertStates.cs" />
+    <Compile Include="CanEnterDisabledStates.cs" />
+    <Compile Include="CanEnterHeldUpStates.cs" />
+    <Compile Include="CanEnterHurtStates.cs" />
+    <Compile Include="CanEnterPatrolStates.cs" />
+    <Compile Include="CanEnterStartStates.cs" />
+    <Compile Include="CanEnterSuspicionStates.cs" />
     <Compile Include="Mocks.cs" />
-    <Compile Include="TestStateMachine.cs" />
+    <Compile Include="CanEnterSearchingStates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
