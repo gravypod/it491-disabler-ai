@@ -1,0 +1,30 @@
+namespace DisablerAi
+{
+    public enum RobotAiState
+    {
+        Start,
+        Inactive,
+        Alert,
+        AlertCallHeadQuarters,
+        AlertAttack,
+        AlertReposition,
+        AlertFollowUp,
+        Patrol,
+        PatrolMarchToEnd,
+        PatrolMarchToStart,
+        PatrolLookAround,
+        Suspicion,
+        SuspicionCallHeadQuarters,
+        SuspicionFollowUp,
+        SuspicionLookAround,
+        SuspicionShrugOff,
+        Searching,
+        HeldUp,
+        HeldUpDemandMarkAmmo,
+        HeldUpDemandMarkEnemies,
+        HeldUpRefuse,
+        HeldUpGetDown,
+        Hurt,
+        Disabled
+    }
+}

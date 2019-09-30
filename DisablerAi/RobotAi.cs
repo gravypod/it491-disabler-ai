@@ -1,0 +1,311 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using DisablerAi.Interfaces;
+
+namespace DisablerAi
+{
+    public class RobotAi
+    {
+        public bool HoldUpDemandMade { get; set; } = false;
+        public IRobot Robot { get; set; }
+        public IPlayer Player { get; set; }
+        public RobotAiState State { get; set; }
+
+        public DateTime TimeMarker = DateTime.Now;
+        public int BurstsFired = 0;
+
+
+        /// <summary>
+        /// A list of times we think we've seen or heard the player.
+        /// </summary>
+        public List<PlayerLocation> PlayerLocations = new List<PlayerLocation>();
+
+        public RobotAi(IRobot robot, IPlayer player)
+        {
+            this.Robot = robot;
+            this.Player = player;
+            this.State = RobotAiState.Start;
+        }
+
+        public bool Can(RobotAiState state)
+        {
+            switch (state)
+            {
+                case RobotAiState.Start:
+                    // No way to get back to start. Cannot collect $200.
+                    return false;
+                case RobotAiState.Inactive:
+                    return this.State == RobotAiState.Start;
+
+                case RobotAiState.Searching:
+                    break;
+
+                // Alert State Machine
+                case RobotAiState.Alert:
+                    if (State == RobotAiState.Patrol)
+                    {
+                        float distance = Robot.Location.DistanceFrom(Player.Location);
+                        if (Robot.CanSee(Player) && distance < 15.0f)
+                            return true;
+                    }
+
+                    return false;
+
+                case RobotAiState.AlertCallHeadQuarters:
+                    if (State == RobotAiState.Alert)
+                    {
+                        if ((DateTime.Now - TimeMarker).TotalSeconds >= 2)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+
+                case RobotAiState.AlertAttack:
+                    if (State == RobotAiState.AlertCallHeadQuarters)
+                    {
+                        // Once we've finished alerting everyone, start attacking
+                        if (Robot.PlayingAnimation != RobotAnimation.AlertCallHeadQuarters)
+                            return true;
+                    }
+
+                    if (State == RobotAiState.AlertReposition)
+                    {
+                        // Start attacking once we've gotten nice and cozy
+                        if (Robot.ReachedTarget() && (DateTime.Now - TimeMarker).TotalSeconds >= 2)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+
+                case RobotAiState.AlertReposition:
+                    if (State == RobotAiState.AlertAttack)
+                    {
+                        if (BurstsFired >= 1 && BurstsFired <= 3)
+                            return true;
+                    }
+
+                    return false;
+
+                case RobotAiState.AlertFollowUp:
+
+                    if (State == RobotAiState.AlertAttack || State == RobotAiState.AlertReposition)
+                    {
+                        // Cannot see the player or the player is not within 60m
+                        if (!Robot.CanSee(Player))
+                            return true;
+
+                        if (Robot.Location.DistanceFrom(Player.Location) > 60)
+                            return true;
+                    }
+
+                    return false;
+                // Suspicion State Machine
+                case RobotAiState.Suspicion:
+                    if (this.State == RobotAiState.Patrol)
+                    {
+                        if (Robot.CanSee(Player) && Robot.Location.DistanceFrom(Player.Location) < 50)
+                            return true;
+
+                        if (Robot.CanHear(Player) && Robot.Location.DistanceFrom(Player.Location) < 40)
+                            return true;
+                    }
+
+                    if (this.State == RobotAiState.Hurt)
+                    {
+                        if (this.Robot.PlayingAnimation == RobotAnimation.HurtStagger)
+                            return false;
+
+                        if ((DateTime.Now - this.TimeMarker).TotalSeconds < 2)
+                            return false;
+
+                        return true;
+                    }
+
+                    return false;
+
+                case RobotAiState.SuspicionFollowUp:
+                    if (State == RobotAiState.Suspicion && this.PlayerLocations.Count() > 0)
+                    {
+                        return true;
+                    }
+
+                    return false;
+
+                case RobotAiState.SuspicionLookAround:
+                    if (State == RobotAiState.SuspicionFollowUp)
+                    {
+                        // Look around rapidly after we've moved the player's last known location
+                        if (Robot.Location.DistanceFrom(PlayerLocations.Last().Location) <= 1)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+
+                case RobotAiState.SuspicionShrugOff:
+                    if (State == RobotAiState.SuspicionLookAround)
+                    {
+                        // If we can't see the player for 10 seconds after walking to the last location and looking 
+                        // around, give up and go back to patrol
+                        if (!Robot.CanSee(Player) && (DateTime.Now - TimeMarker).TotalSeconds > 10)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+
+                case RobotAiState.SuspicionCallHeadQuarters:
+                    if (State == RobotAiState.Suspicion)
+                    {
+                        // Call HQ if we can see a player within 50m
+                        if (Robot.CanSee(Player) && Robot.Location.DistanceFrom(Player.Location) <= 50)
+                            return true;
+
+                        // Call HQ if we've see a player 4 or 5 times within the last few minutes
+                        var now = DateTime.Now;
+                        int timesSeen = PlayerLocations.Count(sighting => (sighting.TimeSeen - now).TotalMinutes <= 3);
+                        if (timesSeen >= 4 || timesSeen <= 5)
+                            return true;
+                    }
+
+                    return false;
+
+
+                // Patrol State Machine
+                case RobotAiState.Patrol:
+                    // TODO: Check conditions for starting via Suspicion
+                    // todo: "Shrug off find and return back to set patrol path at jogging speed"
+
+                    if (State == RobotAiState.PatrolLookAround)
+                    {
+                        if (Robot.PlayingAnimation == RobotAnimation.LookAround)
+                        {
+                            // Still playing animation
+                            return false;
+                        }
+
+                        if ((DateTime.Now - TimeMarker).TotalSeconds <= 5)
+                        {
+                            // Still standing around
+                            return false;
+                        }
+
+                        return true;
+                    }
+
+
+                    if (State == RobotAiState.SuspicionShrugOff)
+                    {
+                        // Wait for robot to return to beginning of patrol before starting patrol
+                        if (Robot.DistanceFromBeginningOfPatrol() >= 1)
+                        {
+                            return false;
+                        }
+
+                        return true;
+                    }
+
+                    return this.State == RobotAiState.Start || this.State == RobotAiState.Suspicion ||
+                           this.State == RobotAiState.Inactive;
+
+                case RobotAiState.PatrolMarchToStart:
+                    if (State == RobotAiState.Patrol)
+                    {
+                        // Walk to the beginning if we're far away from it
+                        return Robot.DistanceFromBeginningOfPatrol() > Robot.DistanceFromEndingOfPatrol();
+                    }
+
+                    return false;
+
+                case RobotAiState.PatrolMarchToEnd:
+                    if (State == RobotAiState.Patrol)
+                    {
+                        // Walk to the ending if we're far away from it
+                        return Robot.DistanceFromBeginningOfPatrol() < Robot.DistanceFromEndingOfPatrol();
+                    }
+
+                    return false;
+
+                case RobotAiState.PatrolLookAround:
+                    if (State == RobotAiState.PatrolMarchToEnd)
+                        return Robot.DistanceFromEndingOfPatrol() <= 0;
+
+                    if (State == RobotAiState.PatrolMarchToStart)
+                        return Robot.DistanceFromBeginningOfPatrol() <= 0;
+
+                    return false;
+
+
+                // Hold Up State Machine
+                case RobotAiState.HeldUp:
+                    if (State == RobotAiState.Alert)
+                        return false;
+
+                    if (State == RobotAiState.Inactive)
+                        return false;
+
+                    if (State == RobotAiState.Disabled)
+                        return false;
+
+                    // Cannot go back to HeldUp after we are put on the ground 
+                    if (State == RobotAiState.HeldUpGetDown)
+                        return false;
+
+                    // Can only hold up Player if it's disabler is <7m from the Head of this Robot
+                    return Player.Disabler.Location.DistanceFrom(Robot.Head.Location) <= 7;
+                case RobotAiState.HeldUpRefuse:
+                    if (State == RobotAiState.HeldUp || State == RobotAiState.HeldUpGetDown)
+                    {
+                        if (HoldUpDemandMade)
+                            return true;
+                    }
+
+                    return false;
+                case RobotAiState.HeldUpDemandMarkAmmo:
+                case RobotAiState.HeldUpDemandMarkEnemies:
+                    if (State == RobotAiState.HeldUp || State == RobotAiState.HeldUpGetDown)
+                    {
+                        if (!HoldUpDemandMade)
+                            return true;
+                    }
+
+                    return false;
+                case RobotAiState.HeldUpGetDown:
+                    if (State == RobotAiState.HeldUp)
+                        return true;
+
+                    // After we've been put on the ground, we will stay on the ground forever.
+                    if (Robot.PlayingAnimation == RobotAnimation.CoweringOnGround)
+                    {
+                        if (State == RobotAiState.HeldUpDemandMarkAmmo)
+                            return true;
+
+                        if (State == RobotAiState.HeldUpDemandMarkEnemies)
+                            return true;
+
+                        if (State == RobotAiState.HeldUpRefuse)
+                            return true;
+                    }
+
+                    return false;
+
+                // Pain State Machine
+                case RobotAiState.Hurt:
+                    return (this.Robot.Shot || this.Robot.HitWithItem) && this.Robot.Health > 0;
+                case RobotAiState.Disabled:
+                    return this.Robot.Head.Shot || this.Robot.Health <= 0;
+                default:
+                    return false;
+            }
+
+            return false;
+        }
+    }
+}
