@@ -36,6 +36,8 @@ namespace TestRobot
             Assert.AreEqual(RobotAiState.Disabled, ai.State);
             Assert.AreEqual(0, robot.Health);
             Assert.AreEqual(RobotAnimation.RagDoll, robot.PlayingAnimation);
+            Assert.False(robot.DetectionLineOfSight);
+            Assert.False(robot.DetectionAudio);
         }
         
         [Test]

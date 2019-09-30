@@ -435,14 +435,16 @@ namespace DisablerAi
             Robot.PlayingAnimation = RobotAnimation.HurtStagger;
             Robot.Health -= 1;
         }
-        
-        
+
+
         private void ThinkDisable()
         {
             Robot.PlayingAnimation = RobotAnimation.RagDoll;
             Robot.Health = 0;
+            Robot.DetectionLineOfSight = false;
+            Robot.DetectionAudio = false;
         }
-        
+
         public void Think()
         {
             var handlers = new Tuple<RobotAiState, Action>[]
