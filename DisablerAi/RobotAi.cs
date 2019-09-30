@@ -394,6 +394,12 @@ namespace DisablerAi
                 case RobotAiState.Hurt:
                     return (this.Robot.Shot || this.Robot.HitWithItem) && this.Robot.Health > 0;
                 case RobotAiState.Disabled:
+                    if (this.Robot.Head.Shot)
+                        return true;
+                    if (this.Robot.Health <= 0)
+                        return true;
+                    if ((this.Robot.Shot || this.Robot.HitWithItem) && this.Robot.Health == 1)
+                        return true;
                     return this.Robot.Head.Shot || this.Robot.Health <= 0;
                 default:
                     return false;
@@ -424,15 +430,30 @@ namespace DisablerAi
             TimeMarker = DateTime.Now;
         }
 
+        private void ThinkHurt()
+        {
+            Robot.PlayingAnimation = RobotAnimation.HurtStagger;
+            Robot.Health -= 1;
+        }
+        
+        
+        private void ThinkDisable()
+        {
+            Robot.PlayingAnimation = RobotAnimation.RagDoll;
+            Robot.Health = 0;
+        }
+        
         public void Think()
         {
             var handlers = new Tuple<RobotAiState, Action>[]
             {
+                new Tuple<RobotAiState, Action>(RobotAiState.Disabled, ThinkDisable),
+                new Tuple<RobotAiState, Action>(RobotAiState.Hurt, ThinkHurt),
                 new Tuple<RobotAiState, Action>(RobotAiState.Inactive, null),
                 new Tuple<RobotAiState, Action>(RobotAiState.Patrol, null),
-                new Tuple<RobotAiState, Action>(RobotAiState.PatrolMarchToStart, this.ThinkPatrolMarchToStart),
-                new Tuple<RobotAiState, Action>(RobotAiState.PatrolMarchToEnd, this.ThinkPatrolMarchToEnd),
-                new Tuple<RobotAiState, Action>(RobotAiState.PatrolLookAround, this.ThinkPatrolLookAround),
+                new Tuple<RobotAiState, Action>(RobotAiState.PatrolMarchToStart, ThinkPatrolMarchToStart),
+                new Tuple<RobotAiState, Action>(RobotAiState.PatrolMarchToEnd, ThinkPatrolMarchToEnd),
+                new Tuple<RobotAiState, Action>(RobotAiState.PatrolLookAround, ThinkPatrolLookAround),
             };
 
             foreach (var handler in handlers)

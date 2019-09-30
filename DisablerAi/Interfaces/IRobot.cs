@@ -23,7 +23,7 @@ namespace DisablerAi.Interfaces
         bool Shot { get; set; }
         bool HitWithItem { get; set; }
         IRobotHead Head { get; }
-        float Health { get; set; }
+        int Health { get; set; }
 
         // Visibility Checks
         bool CanSee(IPlayer player);

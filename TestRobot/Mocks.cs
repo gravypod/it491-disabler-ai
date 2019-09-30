@@ -112,7 +112,7 @@ namespace TestRobot
         public bool Shot { get; set; }
         public bool HitWithItem { get; set; }
         public IRobotHead Head { get; }
-        public float Health { get; set; }
+        public int Health { get; set; }
 
 
         public bool CanSeePlayer { get; set; }
@@ -121,7 +121,7 @@ namespace TestRobot
         public MockRobot(
             ILocation location = null,
             bool hitWithItem = false,
-            float health = 100.0f,
+            int health = 100,
             bool shot = false,
             bool headShot = false
         )
