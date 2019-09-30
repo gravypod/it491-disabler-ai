@@ -491,8 +491,8 @@ namespace TestRobot
             ai.State = RobotAiState.AlertReposition;
             Assert.False(ai.Can(RobotAiState.AlertAttack));
         }
-        
-        
+
+
         // Disabled Unit Tests
         [Test]
         public void TestNoHealthMoveToDisabled()
@@ -504,7 +504,7 @@ namespace TestRobot
             ai.State = RobotAiState.Patrol;
             Assert.True(ai.Can(RobotAiState.Disabled));
         }
-        
+
         [Test]
         public void TestNegativeHealthMoveToDisabled()
         {
@@ -515,7 +515,7 @@ namespace TestRobot
             ai.State = RobotAiState.Patrol;
             Assert.True(ai.Can(RobotAiState.Disabled));
         }
-        
+
         [Test]
         public void TestHeadShotMoveToDisabled()
         {
@@ -526,8 +526,8 @@ namespace TestRobot
             ai.State = RobotAiState.Patrol;
             Assert.True(ai.Can(RobotAiState.Disabled));
         }
-        
-                
+
+
         [Test]
         public void TestHealthyAndNoHeadShotShouldNotMoveToDisabled()
         {
@@ -538,6 +538,46 @@ namespace TestRobot
             robot.Health = 100;
             ai.State = RobotAiState.Patrol;
             Assert.False(ai.Can(RobotAiState.Disabled));
+        }
+
+        // Hurt Unit Test
+
+
+        [Test]
+        public void TestHitToHurt()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+
+            robot.HitWithItem = true;
+            robot.Health = 100;
+            ai.State = RobotAiState.Patrol;
+            Assert.True(ai.Can(RobotAiState.Hurt));
+        }
+
+        [Test]
+        public void TestShotToHurt()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+
+            robot.Shot = true;
+            robot.Health = 100;
+            ai.State = RobotAiState.Patrol;
+            Assert.True(ai.Can(RobotAiState.Hurt));
+        }
+
+        [Test]
+        public void TestNotShotAndNotHitShouldNotHurt()
+        {
+            RobotAi ai = new MockRobotAi();
+            MockRobot robot = (MockRobot) ai.Robot;
+
+            robot.Shot = false;
+            robot.HitWithItem = false;
+            robot.Health = 100;
+            ai.State = RobotAiState.Patrol;
+            Assert.False(ai.Can(RobotAiState.Hurt));
         }
     }
 }
