@@ -171,7 +171,10 @@ namespace DisablerAi
                 case RobotAiState.AlertReposition:
                     if (State == RobotAiState.AlertAttack)
                     {
-                        if (BurstsFired >= 1 && BurstsFired <= 3)
+                        if ((DateTime.Now - TimeMarker).TotalSeconds >= 2)
+                            return true;
+
+                        if (BurstsFired >= 3)
                             return true;
                     }
 
@@ -342,21 +345,24 @@ namespace DisablerAi
 
                 // Hold Up State Machine
                 case RobotAiState.HeldUp:
-                    if (State == RobotAiState.Alert)
-                        return false;
+                    RobotAiState[] disallowedSourceStates = new[]
+                    {
+                        RobotAiState.Alert,
+                        RobotAiState.AlertCallHeadQuarters,
+                        RobotAiState.AlertAttack,
+                        RobotAiState.AlertReposition,
+                        RobotAiState.AlertFollowUp,
 
-                    if (State == RobotAiState.Inactive)
-                        return false;
+                        RobotAiState.Inactive,
+                        RobotAiState.Disabled,
 
-                    if (State == RobotAiState.Disabled)
-                        return false;
+                        // Cannot be held up when being held up
+                        RobotAiState.HeldUp,
+                        // Cannot go back to HeldUp after we are put on the ground
+                        RobotAiState.HeldUpGetDown,
+                    };
 
-                    // Cannot go back to HeldUp after we are put on the ground 
-                    if (State == RobotAiState.HeldUpGetDown)
-                        return false;
-
-                    // Cannot be held up when being held up
-                    if (State == RobotAiState.HeldUp)
+                    if (disallowedSourceStates.Contains(State))
                         return false;
 
                     // While we are refusing, don't switch back to held up
@@ -561,6 +567,39 @@ namespace DisablerAi
             }
         }
 
+        private void ThinkAlert()
+        {
+            TimeMarker = DateTime.Now;
+        }
+
+        private void ThinkAlertCallHeadQuarters()
+        {
+            Robot.PlayingAnimation = RobotAnimation.AlertCallHeadQuarters;
+        }
+
+        private void ThinkAlertAttack()
+        {
+            TimeMarker = DateTime.Now;
+            BurstsFired = 0;
+        }
+
+        private void ThinkAlertReposition()
+        {
+            Robot.Target = Robot.Location.RandomLocation(15, 8);
+        }
+
+        private void ThinkAlertFollowUp()
+        {
+            var locations = PlayerLocations.Where(l => l.Seen).ToList();
+            
+            if (locations.Count <= 0)
+                return;
+
+            var location = PlayerLocations.Last();
+
+            Robot.Target = location.Location;
+        }
+
         public void Think()
         {
             var handlers = new[]
@@ -581,6 +620,12 @@ namespace DisablerAi
                 new Tuple<RobotAiState, Action>(RobotAiState.HeldUpRefuse, ThinkHeldUpRefuse),
                 new Tuple<RobotAiState, Action>(RobotAiState.HeldUpDemandMarkAmmo, ThinkHeldUpMarkAmmo),
                 new Tuple<RobotAiState, Action>(RobotAiState.HeldUpDemandMarkEnemies, ThinkHeldUpMarkEnemies),
+                // Alert
+                new Tuple<RobotAiState, Action>(RobotAiState.Alert, ThinkAlert),
+                new Tuple<RobotAiState, Action>(RobotAiState.AlertCallHeadQuarters, ThinkAlertCallHeadQuarters),
+                new Tuple<RobotAiState, Action>(RobotAiState.AlertAttack, ThinkAlertAttack),
+                new Tuple<RobotAiState, Action>(RobotAiState.AlertReposition, ThinkAlertReposition),
+                new Tuple<RobotAiState, Action>(RobotAiState.AlertFollowUp, ThinkAlertFollowUp),
             };
 
             foreach (var handler in handlers)

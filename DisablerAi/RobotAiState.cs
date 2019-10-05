@@ -2,17 +2,17 @@ namespace DisablerAi
 {
     public enum RobotAiState
     {
-        Start,
-        Inactive,
-        Alert,
-        AlertCallHeadQuarters,
-        AlertAttack,
-        AlertReposition,
-        AlertFollowUp,
-        Patrol,
-        PatrolMarchToEnd,
-        PatrolMarchToStart,
-        PatrolLookAround,
+        Start, // done
+        Inactive, // done
+        Alert, // done
+        AlertCallHeadQuarters, // done
+        AlertAttack, // done
+        AlertReposition, // done
+        AlertFollowUp, // done
+        Patrol, // done
+        PatrolMarchToEnd, // done
+        PatrolMarchToStart, // done
+        PatrolLookAround, // done
         Suspicion,
         SuspicionCallHeadQuarters,
         SuspicionFollowUp,
@@ -23,12 +23,12 @@ namespace DisablerAi
         SearchingLookAroundPointOfInterest,
         SearchingFollowUpPlayerLastSeen,
         SearchingLookAroundPlayerLastSeen,
-        HeldUp,
-        HeldUpDemandMarkAmmo,
-        HeldUpDemandMarkEnemies,
-        HeldUpRefuse,
-        HeldUpGetDown,
-        Hurt,
-        Disabled
+        HeldUp, // done
+        HeldUpDemandMarkAmmo, // done
+        HeldUpDemandMarkEnemies, // done
+        HeldUpRefuse, // done
+        HeldUpGetDown, // done
+        Hurt, // done
+        Disabled // done
     }
 }

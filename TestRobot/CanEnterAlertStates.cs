@@ -74,10 +74,10 @@ namespace TestRobot
             ai.State = RobotAiState.AlertAttack;
 
             ai.BurstsFired = 1;
-            Assert.True(ai.Can(RobotAiState.AlertReposition));
+            Assert.False(ai.Can(RobotAiState.AlertReposition));
 
             ai.BurstsFired = 2;
-            Assert.True(ai.Can(RobotAiState.AlertReposition));
+            Assert.False(ai.Can(RobotAiState.AlertReposition));
 
             ai.BurstsFired = 3;
             Assert.True(ai.Can(RobotAiState.AlertReposition));
@@ -101,7 +101,7 @@ namespace TestRobot
             RobotAi ai = new MockRobotAi();
             ai.State = RobotAiState.AlertAttack;
             ai.BurstsFired = 4;
-            Assert.False(ai.Can(RobotAiState.AlertReposition));
+            Assert.True(ai.Can(RobotAiState.AlertReposition));
         }
 
         [Test]

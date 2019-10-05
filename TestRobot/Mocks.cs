@@ -42,7 +42,7 @@ namespace TestRobot
 
         protected bool Equals(MockLocation other)
         {
-            return _x.Equals(other._x) && _y.Equals(other._y) && _z.Equals(other._z);
+            return _x == other._x && _y == other._y && _z == other._z;
         }
 
         public override bool Equals(object obj)
