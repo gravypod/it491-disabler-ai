@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using DisablerAi;
 using NUnit.Framework;
 
@@ -166,7 +167,7 @@ namespace TestRobot
 
             ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, new MockLocation(), false, true));
 
-            ai.State = RobotAiState.Suspicion;
+            ai.State = RobotAiState.SuspicionCallHeadQuarters;
             Assert.True(ai.Can(RobotAiState.SuspicionFollowUp));
         }
 
@@ -182,7 +183,7 @@ namespace TestRobot
             robot.DetectionLineOfSight = true;
             robot.DetectionAudio = true;
 
-            robot.Location = new MockLocation(999, 999, 999);
+            robot.Target = robot.Location = new MockLocation(999, 999, 999);
             player.Location = new MockLocation(1, 1, 1);
 
             ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
@@ -208,6 +209,7 @@ namespace TestRobot
             player.Location = new MockLocation(1, 1, 1);
 
             ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, new MockLocation(10, 10, 10), false, true));
+            robot.Target = ai.PlayerLocations.Last().Location;
 
             ai.State = RobotAiState.SuspicionFollowUp;
             Assert.False(ai.Can(RobotAiState.SuspicionLookAround));
@@ -230,7 +232,7 @@ namespace TestRobot
             player.Location = new MockLocation(1, 1, 1);
 
             ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
-            ai.TimeMarker = DateTime.Now - TimeSpan.FromMinutes(1);
+            robot.PlayingAnimation = RobotAnimation.None;
 
             ai.State = RobotAiState.SuspicionLookAround;
             Assert.True(ai.Can(RobotAiState.SuspicionShrugOff));
@@ -260,7 +262,7 @@ namespace TestRobot
 
 
         [Test]
-        public void TestSuspicionLookAroundCannotShrugOffIfLookAroundTimeoutNotExpired()
+        public void TestSuspicionLookAroundCannotShrugOffIfLookAroundAnimationPlaying()
         {
             RobotAi ai = new MockRobotAi();
             MockRobot robot = (MockRobot) ai.Robot;
@@ -275,8 +277,8 @@ namespace TestRobot
             player.Location = new MockLocation(1, 1, 1);
 
             ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));
-            ai.TimeMarker = DateTime.Now;
 
+            robot.PlayingAnimation = RobotAnimation.LookAround;
             ai.State = RobotAiState.SuspicionLookAround;
             Assert.False(ai.Can(RobotAiState.SuspicionShrugOff));
         }
@@ -293,7 +295,7 @@ namespace TestRobot
             robot.DetectionLineOfSight = true;
             robot.DetectionAudio = true;
 
-            robot.Location = new MockLocation(999, 999, 999);
+            robot.Target = robot.Location = new MockLocation(999, 999, 999);
             player.Location = new MockLocation(1, 1, 1);
 
             ai.PlayerLocations.Add(new PlayerLocation(DateTime.Now, robot.Location, false, true));

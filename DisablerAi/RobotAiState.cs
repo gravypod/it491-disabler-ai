@@ -13,11 +13,11 @@ namespace DisablerAi
         PatrolMarchToEnd, // done
         PatrolMarchToStart, // done
         PatrolLookAround, // done
-        Suspicion,
-        SuspicionCallHeadQuarters,
-        SuspicionFollowUp,
-        SuspicionLookAround,
-        SuspicionShrugOff,
+        Suspicion, // done
+        SuspicionCallHeadQuarters, // done
+        SuspicionFollowUp, // done
+        SuspicionLookAround, // done
+        SuspicionShrugOff, // done
         Searching,
         SearchingFollowUpPointOfInterest,
         SearchingLookAroundPointOfInterest,

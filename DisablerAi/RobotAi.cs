@@ -54,7 +54,10 @@ namespace DisablerAi
                     }
 
                     if (State == RobotAiState.SuspicionCallHeadQuarters)
-                        return true;
+                    {
+                        if (Robot.PlayingAnimation == RobotAnimation.None)
+                            return true;
+                    }
 
                     return false;
 
@@ -219,7 +222,8 @@ namespace DisablerAi
                     return false;
 
                 case RobotAiState.SuspicionFollowUp:
-                    if (State == RobotAiState.Suspicion && this.PlayerLocations.Count() > 0)
+                    if (State == RobotAiState.SuspicionCallHeadQuarters &&
+                        Robot.PlayingAnimation == RobotAnimation.None)
                     {
                         return true;
                     }
@@ -229,9 +233,11 @@ namespace DisablerAi
                 case RobotAiState.SuspicionLookAround:
                     if (State == RobotAiState.SuspicionFollowUp)
                     {
-                        float distance = Robot.Location.DistanceFrom(PlayerLocations.Last().Location);
+                        if (Robot.PlayingAnimation == RobotAnimation.LookAround)
+                            return false;
+
                         // Look around rapidly after we've moved the player's last known location
-                        if (distance <= 1)
+                        if (Robot.ReachedTarget())
                         {
                             return true;
                         }
@@ -243,16 +249,18 @@ namespace DisablerAi
                     if (State == RobotAiState.SuspicionLookAround)
                     {
                         if (Robot.CanSee(Player))
-                        {
                             return false;
-                        }
 
+                        if (Robot.PlayingAnimation == RobotAnimation.LookAround)
+                            return false;
+
+                        return true;
                         // If we can't see the player for 10 seconds after walking to the last location and looking 
                         // around, give up and go back to patrol
-                        if ((DateTime.Now - TimeMarker).TotalSeconds > 10)
-                        {
-                            return true;
-                        }
+//                        if ((DateTime.Now - TimeMarker).TotalSeconds > 10)
+//                        {
+//                            return true;
+//                        }
                     }
 
                     return false;
@@ -278,8 +286,11 @@ namespace DisablerAi
 
                 // Patrol State Machine
                 case RobotAiState.Patrol:
-                    // TODO: Check conditions for starting via Suspicion
-                    // todo: "Shrug off find and return back to set patrol path at jogging speed"
+                    if (State == RobotAiState.SuspicionShrugOff)
+                    {
+                        if (Robot.ReachedTarget())
+                            return true;
+                    }
 
                     if (State == RobotAiState.PatrolLookAround)
                     {
@@ -310,7 +321,7 @@ namespace DisablerAi
                         return true;
                     }
 
-                    return this.State == RobotAiState.Start || this.State == RobotAiState.Suspicion ||
+                    return this.State == RobotAiState.Start ||
                            this.State == RobotAiState.Inactive;
 
                 case RobotAiState.PatrolMarchToStart:
@@ -360,10 +371,13 @@ namespace DisablerAi
                         RobotAiState.HeldUp,
                         // Cannot go back to HeldUp after we are put on the ground
                         RobotAiState.HeldUpGetDown,
+                        // Cannot be held up after attack
+                        RobotAiState.Hurt,
                     };
 
                     if (disallowedSourceStates.Contains(State))
                         return false;
+
 
                     // While we are refusing, don't switch back to held up
                     if (Robot.PlayingAnimation == RobotAnimation.CoweringRefuse)
@@ -495,6 +509,7 @@ namespace DisablerAi
         {
             Robot.PlayingAnimation = RobotAnimation.HurtStagger;
             Robot.Health -= 1;
+            TimeMarker = DateTime.Now;
         }
 
         private void ThinkDisable()
@@ -591,13 +606,72 @@ namespace DisablerAi
         private void ThinkAlertFollowUp()
         {
             var locations = PlayerLocations.Where(l => l.Seen).ToList();
-            
+
             if (locations.Count <= 0)
                 return;
 
             var location = PlayerLocations.Last();
 
             Robot.Target = location.Location;
+        }
+
+        void ThinkSuspicionCallHq()
+        {
+            Robot.PlayingAnimation = RobotAnimation.AlertCallHeadQuarters;
+        }
+
+        private void ThinkSuspicionFollowUp()
+        {
+            // Target some location after
+            if (PlayerLocations.Count > 0)
+            {
+                Robot.Target = PlayerLocations.Last().Location;
+            }
+            else
+            {
+                Robot.Target = Player.Location.RandomLocation(50, 0);
+            }
+        }
+
+        private void ThinkSuspicionLookAround()
+        {
+            Robot.PlayingAnimation = RobotAnimation.LookAround;
+            Robot.Target = null;
+        }
+
+        private void ThinkSuspicionShrugOff()
+        {
+            Robot.Target = Robot.PatrolStart;
+        }
+
+        void PlayerLocationUpdate()
+        {
+            var location = new PlayerLocation(
+                DateTime.Now,
+                Player.Location,
+                Robot.CanSee(Player),
+                Robot.CanHear(Player)
+            );
+
+
+            if (PlayerLocations.Count > 0)
+            {
+                var last = PlayerLocations.Last();
+                // If the last location was within 3 meters, don't track this
+                // new one unless it is different
+                if (last.Location.DistanceFrom(location.Location) < 3.0f)
+                {
+                    if (last.Heard == location.Heard || last.Seen == location.Seen)
+                        return;
+                }
+
+                while (PlayerLocations.Count > 50)
+                {
+                    PlayerLocations.RemoveAt(0);
+                }
+            }
+
+            PlayerLocations.Add(location);
         }
 
         public void Think()
@@ -626,7 +700,16 @@ namespace DisablerAi
                 new Tuple<RobotAiState, Action>(RobotAiState.AlertAttack, ThinkAlertAttack),
                 new Tuple<RobotAiState, Action>(RobotAiState.AlertReposition, ThinkAlertReposition),
                 new Tuple<RobotAiState, Action>(RobotAiState.AlertFollowUp, ThinkAlertFollowUp),
+                // Suspicion
+                new Tuple<RobotAiState, Action>(RobotAiState.Suspicion, null),
+                new Tuple<RobotAiState, Action>(RobotAiState.SuspicionCallHeadQuarters, ThinkSuspicionCallHq),
+                new Tuple<RobotAiState, Action>(RobotAiState.SuspicionFollowUp, ThinkSuspicionFollowUp),
+                new Tuple<RobotAiState, Action>(RobotAiState.SuspicionLookAround, ThinkSuspicionLookAround),
+                new Tuple<RobotAiState, Action>(RobotAiState.SuspicionShrugOff, ThinkSuspicionShrugOff),
             };
+
+            if (Robot.CanSee(Player) || Robot.CanHear(Player))
+                PlayerLocationUpdate();
 
             foreach (var handler in handlers)
             {

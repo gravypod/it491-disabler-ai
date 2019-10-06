@@ -57,6 +57,7 @@
     <Compile Include="ThinkPain.cs" />
     <Compile Include="ThinkInactive.cs" />
     <Compile Include="ThinkPatrol.cs" />
+    <Compile Include="ThinkSuspicion.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DisablerAi\DisablerAi.csproj">
